@@ -37,6 +37,25 @@ class StudentList(Page):
         return context
 
 
+# https://docs.wagtail.io/en/v2.10.1/reference/pages/model_recipes.html#disabling-free-tagging
+
+
+@register_snippet
+class StudentTag(TagBase):
+    
+    free_tagging = False
+    content_object = ParentalKey(
+        'Student',
+        related_name='tagged_items',
+        on_delete=models.SET("CorrespondingStudentDeleted")
+    )
+    class Meta:
+        verbose_name = "blog tag"
+        verbose_name_plural = "blog tags"
+
+
+
+
 # https://docs.wagtail.io/en/v2.10.1/reference/pages/model_reference.html#page
 #  owner gives info about who is owner of this page
 class Student(Page):
@@ -46,7 +65,7 @@ class Student(Page):
     intro = models.CharField(max_length=250,blank=True)
     body = RichTextField(blank=True)
 
-    tags = ClusterTaggableManager(through=BlogPageTag, blank=True)
+    tags = ClusterTaggableManager(through=StudentTag, blank=True)
 
     def main_image(self):
         gallery_item = self.gallery_images.first()
@@ -90,21 +109,6 @@ class BlogPageGalleryImage(Orderable):
     ]
 
 
-# https://docs.wagtail.io/en/v2.10.1/reference/pages/model_recipes.html#disabling-free-tagging
-
-
-@register_snippet
-class StudentTag(TagBase):
-    free_tagging = False
-    content_object = ParentalKey(
-        'Student',
-        related_name='tagged_items',
-        on_delete=models.SET("CorrespondingStudentDeleted")
-    )
-    class Meta:
-        verbose_name = "blog tag"
-        verbose_name_plural = "blog tags"
-
 
 
 # class BlogPageTag(TaggedItemBase):
@@ -114,7 +118,7 @@ class StudentTag(TagBase):
 #         on_delete=models.CASCADE
 #     )
 
-class StudentTag(Page):
+class StudentTagIndex(Page):
 
     def get_context(self, request):
 
