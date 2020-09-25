@@ -9,7 +9,9 @@
 
     <div class="intro">{{ page.intro|richtext }}</div>
 
-
+{% for tag in page.tags.all %}
+    <a href="{% pageurl page.blog_index %}?tag={{ tag }}">{{ tag }}</a>
+{% endfor %}
 {% for post in studentslist %}
     {% with post=post.specific %}
         <h2><a href="{% pageurl post %}">{{ post.title }}</a></h2>

@@ -22,10 +22,11 @@ from wagtail.admin.edit_handlers import FieldPanel, InlinePanel, MultiFieldPanel
 from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail.search import index
 
+# https://tentacles666.wordpress.com/2011/10/29/django-hierarchical-tags-with-taggit-and-tree/comment-page-1/
 # title will be name , intro will be about student ,   
 class StudentList(Page):
     intro = RichTextField(blank=True)
-
+ 
     content_panels = Page.content_panels + [
         FieldPanel('intro', classname="full")
     ]
@@ -34,27 +35,50 @@ class StudentList(Page):
         context = super().get_context(request)
         blogpages = self.get_children().live().order_by('-first_published_at')
         context['studentslist'] = blogpages
+        # Filter by tag
+        tag = request.GET.get('tag')
+        if tag:
+            blogpages = blogpages.filter(tags__name=tag)
+
+        context['studentslist'] = blogpages
         return context
+
+  
 
 
 # https://docs.wagtail.io/en/v2.10.1/reference/pages/model_recipes.html#disabling-free-tagging
 
 
+# @register_snippet
+# class StudentTag(TagBase):
+    
+#     free_tagging = False
+#     content_object = ParentalKey(
+#         'Student',
+#         related_name='tagged_items',
+#         on_delete=models.SET("CorrespondingStudentDeleted")
+#     )
+#     class Meta:
+#         verbose_name = "blog tag"
+#         verbose_name_plural = "blog tags"
+
+# class StudentTag(TaggedItemBase):
+#     content_object = ParentalKey('sdms_app.Student', on_delete=models.SET("CorrespondingStudentDeleted"), related_name='tagged_items')
 @register_snippet
 class StudentTag(TagBase):
-    
     free_tagging = False
-    content_object = ParentalKey(
-        'Student',
-        related_name='tagged_items',
-        on_delete=models.SET("CorrespondingStudentDeleted")
-    )
     class Meta:
         verbose_name = "blog tag"
         verbose_name_plural = "blog tags"
 
-
-
+class TaggedStudent(ItemBase):
+    tag = models.ForeignKey(
+        StudentTag, related_name="tagged_blogs", on_delete=models.SET('TagDeleted')
+    )
+    content_object = ParentalKey(
+        to='sdms_app.Student',
+        on_delete=models.SET('StudentDeleted'),
+        related_name='tagged_items'
 
 # https://docs.wagtail.io/en/v2.10.1/reference/pages/model_reference.html#page
 #  owner gives info about who is owner of this page
@@ -64,8 +88,10 @@ class Student(Page):
   
     intro = models.CharField(max_length=250,blank=True)
     body = RichTextField(blank=True)
+    # tags = ClusterTaggableManager(through=StudentTag, blank=True)
+    tags = ClusterTaggableManager(through='sdms_app.StudentTag', blank=True)
 
-    tags = ClusterTaggableManager(through=StudentTag, blank=True)
+    # tags = ClusterTaggableManager(through=StudentTag, blank=True)
 
     def main_image(self):
         gallery_item = self.gallery_images.first()
