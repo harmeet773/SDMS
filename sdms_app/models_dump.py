@@ -33,18 +33,18 @@ class StudentList(Page):
  
     content_panels = Page.content_panels + [
         FieldPanel('intro', classname="full")
-    ] 
+    ]
     def get_context(self, request):
         # Update context to include only published posts, ordered by reverse-chron
         context = super().get_context(request)
         blogpages = self.get_children().live().order_by('-first_published_at')
         context['studentslist'] = blogpages
-        # # Filter by tag
-        # tag = request.GET.get('tag')
-        # if tag:
-        #     blogpages = blogpages.filter(tags__name=tag)
+        # Filter by tag
+        tag = request.GET.get('tag')
+        if tag:
+            blogpages = blogpages.filter(tags__name=tag)
 
-        # context['studentslist'] = blogpages
+        context['studentslist'] = blogpages
         return context
 
   
@@ -70,10 +70,10 @@ class StudentList(Page):
 #     content_object = ParentalKey('sdms_app.Student', on_delete=models.SET("CorrespondingStudentDeleted"), related_name='tagged_items')
 # @register_snippet
 # class StudentTag(TagBase):
-
+@register_snippet
 class StudentTag(TaggedItemBase):
 
-    free_tagging = True
+    free_tagging = False
     class Meta:
         verbose_name = "blog tag"
         verbose_name_plural = "blog tags"
@@ -97,7 +97,7 @@ class Student(Page):
     intro = models.CharField(max_length=250,blank=True)
     body = RichTextField(blank=True)
     # tags = ClusterTaggableManager(through=StudentTag, blank=True)
-    tags = ClusterTaggableManager(through='sdms_app.TaggedStudent', blank=True)
+    tags = ClusterTaggableManager(through='sdms_app.StudentTag', blank=True)
 
     # tags = ClusterTaggableManager(through=StudentTag, blank=True)
 
