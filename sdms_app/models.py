@@ -158,7 +158,7 @@ class FeesInfo(Orderable):
     page = ParentalKey(Student, blank=False, null=True, on_delete=models.CASCADE, related_name='submitted_fees')
     entry_by= models.CharField(blank= False ,max_length=250)
     # fee_submitted = models.CharField(blank=True, max_length=250)
-    amount = models.IntegerField(max_length=6,blank=False,default=0)
+    amount = models.IntegerField(blank=False,default=0)
     submission_date = models.DateField("Fee submission date")
     receipt_given = models.BooleanField(default=True)
     panels = [
