@@ -17,11 +17,20 @@
         {% endfor %}
     </div>
 {% endif %}
+
+created by {{page.owner}}
     {{ page.body|richtext }}
     {% for item in page.gallery_images.all %}
         <div style="float: left; margin: 10px">
             {% image item.image fill-320x240 %}
             <p>{{ item.caption }}</p>
+        </div>
+    {% endfor %}
+
+    {% for item in page.submitted_fees.all %}
+        <div style="float: left; margin: 10px">
+            <p>Entry made by  {{item.entry_by}}</p>
+            <p>{{ item.fee_submitted }}</p>
         </div>
     {% endfor %}
 

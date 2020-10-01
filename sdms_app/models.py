@@ -1,5 +1,8 @@
 from django.db import models
 
+# subpage_types = []
+# parent_page_types = ['mysite.modelname']
+
 # Create your models here.
 
 from modelcluster.fields import ParentalKey
@@ -30,7 +33,8 @@ from taggit.models import TagBase, ItemBase
 # title will be name , intro will be about student ,   
 class StudentList(Page):
     intro = RichTextField(blank=True)
- 
+    parent_page_types = [] 
+    subpage_types = ['sdms_app.Student']
     content_panels = Page.content_panels + [
         FieldPanel('intro', classname="full")
     ] 
@@ -90,17 +94,24 @@ class TaggedStudent(ItemBase):
 # https://docs.wagtail.io/en/v2.10.1/reference/pages/model_reference.html#page
 #  owner gives info about who is owner of this page
 
+class FeeSubmited():
+    amount = models.IntegerField(max_length=6)
+    # submitted_on = models.
+
+
 class Student(Page):
     date = models.DateField("Admission date")
 
   
     intro = models.CharField(max_length=250,blank=True)
+    #  = models.CharField(max_length=250,blank=True)
     body = RichTextField(blank=True)
     # tags = ClusterTaggableManager(through=StudentTag, blank=True)
     tags = ClusterTaggableManager(through='sdms_app.TaggedStudent', blank=True)
 
     # tags = ClusterTaggableManager(through=StudentTag, blank=True)
-
+    parent_page_types = ['sdms_app.StudentList']
+    
     def main_image(self):
         gallery_item = self.gallery_images.first()
         if gallery_item:
@@ -115,20 +126,16 @@ class Student(Page):
 
     content_panels = Page.content_panels + [
         MultiFieldPanel([
-            # FieldPanel('date'),
+            FieldPanel('intro'),
             FieldPanel('tags'),
         ], heading="Tags associated with student"),
         FieldPanel('date'),
         FieldPanel('intro'),
         FieldPanel('body'),
         InlinePanel('gallery_images', label="Gallery images"),
+        InlinePanel('submitted_fees', label="fees info"),
     ]
-    content_panels = Page.content_panels + [
-        FieldPanel('date'),
-        FieldPanel('intro'),
-        FieldPanel('body', classname="full"),
-        InlinePanel('gallery_images', label="Gallery images"),
-    ]
+
 
 class BlogPageGalleryImage(Orderable):
     page = ParentalKey(Student, on_delete=models.SET("CorrespondingStudentDeleted"), related_name='gallery_images')
@@ -142,6 +149,16 @@ class BlogPageGalleryImage(Orderable):
         FieldPanel('caption'),
     ]
 
+
+class FeesInfo(Orderable):
+    page = ParentalKey(Student, blank=True, null=True, on_delete=models.CASCADE, related_name='submitted_fees')
+    entry_by= models.CharField(blank= False ,max_length=250)
+    fee_submitted = models.CharField(blank=True, max_length=250)
+
+    panels = [
+        FieldPanel('entry_by'),
+        FieldPanel('fee_submitted'),
+    ]
 
 
 
