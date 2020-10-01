@@ -43,12 +43,12 @@ class StudentList(Page):
         context = super().get_context(request)
         blogpages = self.get_children().live().order_by('-first_published_at')
         context['studentslist'] = blogpages
-        # # Filter by tag
-        # tag = request.GET.get('tag')
-        # if tag:
-        #     blogpages = blogpages.filter(tags__name=tag)
+        # Filter by tag
+        tag = request.GET.get('tag')
+        if tag:
+            blogpages = Student.filter(tags__name=tag)
 
-        # context['studentslist'] = blogpages
+        context['studentslist'] = blogpages
         return context
 
   
@@ -57,58 +57,59 @@ class StudentList(Page):
 # https://docs.wagtail.io/en/v2.10.1/reference/pages/model_recipes.html#disabling-free-tagging
 
 
-# @register_snippet
-# class StudentTag(TagBase):
-    
-#     free_tagging = False
-#     content_object = ParentalKey(
-#         'Student',
-#         related_name='tagged_items',
-#         on_delete=models.SET("CorrespondingStudentDeleted")
-#     )
+
+# class StudentTag(TaggedItemBase):
+
+#     free_tagging = True
 #     class Meta:
 #         verbose_name = "blog tag"
 #         verbose_name_plural = "blog tags"
 
-# class StudentTag(TaggedItemBase):
-#     content_object = ParentalKey('sdms_app.Student', on_delete=models.SET("CorrespondingStudentDeleted"), related_name='tagged_items')
-# @register_snippet
-# class StudentTag(TagBase):
-
-class StudentTag(TaggedItemBase):
-
-    free_tagging = True
-    class Meta:
-        verbose_name = "blog tag"
-        verbose_name_plural = "blog tags"
-
-class TaggedStudent(ItemBase):
-    tag = models.ForeignKey(
-        StudentTag, related_name="tagged_blogs", on_delete=models.SET('TagDeleted')
-    )
-    content_object = ParentalKey(
-        to='sdms_app.Student',
-        on_delete=models.SET('StudentDeleted'),
-        related_name='tagged_items' )
+# class TaggedStudent(ItemBase):
+#     tag = models.ForeignKey(
+#         StudentTag, related_name="tagged_blogs", on_delete=models.SET('TagDeleted')
+#     )
+#     content_object = ParentalKey(
+#         to='sdms_app.Student',
+#         on_delete=models.SET('StudentDeleted'),
+#         related_name='tagged_items' )
 
 # https://docs.wagtail.io/en/v2.10.1/reference/pages/model_reference.html#page
 #  owner gives info about who is owner of this page
 
-class FeeSubmited():
-    amount = models.IntegerField(max_length=6)
-    # submitted_on = models.
+class Tags(TaggedItemBase):
+    content_object = ParentalKey(
+        'Student',
+        related_name='tagged_items',
+        on_delete=models.SET("Delete_tags_to_delete_student_entry")
+    )
 
 
+
+
+@register_snippet
+class Courses(models.Model):
+    name = models.CharField(max_length=255)
+
+    panels = [
+        FieldPanel('name'),
+    ]
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = 'blog categories'
 class Student(Page):
     date = models.DateField("Admission date")
-
-  
+    parent_page_types = ['sdms_app.StudentList']
+    subpage_types = []
     intro = models.CharField(max_length=250,blank=True)
     #  = models.CharField(max_length=250,blank=True)
     body = RichTextField(blank=True)
     # tags = ClusterTaggableManager(through=StudentTag, blank=True)
-    tags = ClusterTaggableManager(through='sdms_app.TaggedStudent', blank=True)
-
+    # tags = ClusterTaggableManager(through='sdms_app.TaggedStudent', blank=True)
+    tags = ClusterTaggableManager(through=Tags, blank=True)
     # tags = ClusterTaggableManager(through=StudentTag, blank=True)
     parent_page_types = ['sdms_app.StudentList']
     
@@ -151,31 +152,31 @@ class BlogPageGalleryImage(Orderable):
 
 
 class FeesInfo(Orderable):
-    page = ParentalKey(Student, blank=True, null=True, on_delete=models.CASCADE, related_name='submitted_fees')
+    """
+    records of fees submitted
+    """
+    page = ParentalKey(Student, blank=False, null=True, on_delete=models.CASCADE, related_name='submitted_fees')
     entry_by= models.CharField(blank= False ,max_length=250)
-    fee_submitted = models.CharField(blank=True, max_length=250)
-
+    # fee_submitted = models.CharField(blank=True, max_length=250)
+    amount = models.IntegerField(max_length=6,blank=False,default=0)
+    submission_date = models.DateField("Fee submission date")
+    receipt_given = models.BooleanField(default=True)
     panels = [
         FieldPanel('entry_by'),
-        FieldPanel('fee_submitted'),
+        FieldPanel('amount'),
+        FieldPanel('submission_date'),
+        FieldPanel('receipt_given')
+
     ]
 
-
-
-# class BlogPageTag(TaggedItemBase):
-#     content_object = ParentalKey(
-#         'Student',
-#         related_name='tagged_items',
-#         on_delete=models.CASCADE
-#     )
-
 class StudentTagIndex(Page):
-
+    subpage_types = []
+    parent_page_types = []
     def get_context(self, request):
 
         # Filter by tag
         tag = request.GET.get('tag')
-        blogpages = BlogPage.objects.filter(tags__name=tag)
+        blogpages = Student.objects.filter(tags__name=tag)
 
         # Update template context
         context = super().get_context(request)
