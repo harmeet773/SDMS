@@ -33,7 +33,7 @@ from taggit.models import TagBase, ItemBase
 # title will be name , intro will be about student ,   
 class StudentList(Page):
     intro = RichTextField(blank=True)
-    parent_page_types = [] 
+    parent_page_types = ['home.HomePage'] 
     subpage_types = ['sdms_app.Student']
     content_panels = Page.content_panels + [
         FieldPanel('intro', classname="full")
@@ -111,7 +111,7 @@ class Student(Page):
     # tags = ClusterTaggableManager(through='sdms_app.TaggedStudent', blank=True)
     tags = ClusterTaggableManager(through=Tags, blank=True)
     # tags = ClusterTaggableManager(through=StudentTag, blank=True)
-    parent_page_types = ['sdms_app.StudentList']
+    
     
     def main_image(self):
         gallery_item = self.gallery_images.first()
@@ -136,6 +136,7 @@ class Student(Page):
         InlinePanel('gallery_images', label="Gallery images"),
         InlinePanel('submitted_fees', label="fees info"),
     ]
+ 
 
 
 class BlogPageGalleryImage(Orderable):
@@ -171,7 +172,7 @@ class FeesInfo(Orderable):
 
 class StudentTagIndex(Page):
     subpage_types = []
-    parent_page_types = []
+    parent_page_types = ['home.HomePage']
     def get_context(self, request):
 
         # Filter by tag
